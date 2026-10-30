@@ -1,21 +1,54 @@
 using ArtistaConnect.Model;
 using Microsoft.EntityFrameworkCore;
-using MySql.Data.MySqlClient;
-using Org.BouncyCastle.Asn1.Cms;
 
 namespace ArtistaConnect.Data;
 
-public class ArtistaContext : DbContext
+public class ArtistaContext(DbContextOptions<ArtistaContext> options) : DbContext(options)
 {
-    // Será criado a tabela Diarios do tipo DbSet
-    public DbSet<Musica> Musicas {get; set;}
-    // Esse será o primeiro atributo da tabela Diarios
-    private readonly string stringConexao = "Server=localhost;Port=3306;Database=ArtistaConnect;Uid=root;Pwd=toor;";
+    public DbSet<Musica> Musicas => Set<Musica>();
+    public DbSet<Artista> Artistas => Set<Artista>();
+    public DbSet<GeneroMusical> GenerosMusicais => Set<GeneroMusical>();
+    public DbSet<Usuario> Usuarios => Set<Usuario>();
 
-    // Método de conexão através do Entity Framework
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        optionsBuilder.UseMySql(stringConexao, 
-            ServerVersion.AutoDetect(stringConexao));
+        modelBuilder.Entity<Musica>().HasKey(musica => musica.Titulo);
+
+        modelBuilder.Entity<Artista>()
+            .HasKey(artista => artista.ID);
+        modelBuilder.Entity<Artista>()
+            .Property(artista => artista.ID)
+            .HasMaxLength(36);
+        modelBuilder.Entity<Artista>()
+            .Property(artista => artista.Nome)
+            .HasMaxLength(120)
+            .IsRequired();
+
+        modelBuilder.Entity<GeneroMusical>()
+            .HasKey(genero => genero.ID);
+        modelBuilder.Entity<GeneroMusical>()
+            .Property(genero => genero.ID)
+            .HasMaxLength(36);
+        modelBuilder.Entity<GeneroMusical>()
+            .Property(genero => genero.Nome)
+            .HasMaxLength(80)
+            .IsRequired();
+        modelBuilder.Entity<GeneroMusical>()
+            .HasIndex(genero => genero.Nome)
+            .IsUnique();
+
+        modelBuilder.Entity<Usuario>()
+            .HasKey(usuario => usuario.ID);
+        modelBuilder.Entity<Usuario>()
+            .Property(usuario => usuario.Nome)
+            .HasMaxLength(120)
+            .IsRequired();
+        modelBuilder.Entity<Usuario>()
+            .HasIndex(usuario => usuario.Nome)
+            .IsUnique();
+        modelBuilder.Entity<Usuario>()
+            .Property(usuario => usuario.SenhaHash)
+            .HasMaxLength(512)
+            .IsRequired();
     }
 }

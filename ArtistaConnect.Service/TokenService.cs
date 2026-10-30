@@ -1,49 +1,47 @@
-//instalado neste projeto o Microsoft.AspNetCore.Authenticator.JwtBearer através do NuGet
-using System.Configuration;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using ArtistaConnect.Model;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-//using Microsoft.Extensions.Configuration;
+
+namespace ArtistaConnect.Service;
 
 public class TokenService
 {
-    // injeção de dependência:
-    private readonly IConfiguration _configuration;
+    private readonly IConfiguration configuration;
+
     public TokenService(IConfiguration configuration)
     {
-        _configuration = configuration;
+        this.configuration = configuration;
     }
-    public string GerarToken(Artista artista)
+
+    public string GerarToken(Usuario usuario)
     {
-        var handler = new JwtSecurityTokenHandler();
+        var jwtSettings = configuration.GetSection("JWTSetting");
+        var secretKey = jwtSettings["SecretKey"]
+            ?? throw new InvalidOperationException("JWTSetting:SecretKey não configurada.");
+        var issuer = jwtSettings["Issuer"]
+            ?? throw new InvalidOperationException("JWTSetting:Issuer não configurado.");
+        var audience = jwtSettings["Audience"]
+            ?? throw new InvalidOperationException("JWTSetting:Audience não configurado.");
+        var expirationInHours = jwtSettings.GetValue<double>("ExpirationInHours");
 
-        var jwtSettings = _configuration.GetSection("JWTSetting");
-        var chaveSecretaBytes = Encoding.ASCII.GetBytes(jwtSettings["SecretKey"]!);
-        // var chaveSecretaBytes = Encoding.ASCII.GetBytes(ConfigurationManager.AppSettings["JWTSetting:SecretKey"]!);
+        var credentials = new SigningCredentials(
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+            SecurityAlgorithms.HmacSha256);
 
-        var credenciais = new SigningCredentials
-        (
-            new SymmetricSecurityKey(chaveSecretaBytes), 
-            SecurityAlgorithms.HmacSha256Signature
-        );
+        var token = new JwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            claims:
+            [
+                new Claim(JwtRegisteredClaimNames.Sub, usuario.ID.ToString()),
+                new Claim(ClaimTypes.Name, usuario.Nome),
+            ],
+            expires: DateTime.UtcNow.AddHours(expirationInHours),
+            signingCredentials: credentials);
 
-        var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, artista.Nome!)
-        };
-
-        var descriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(claims),
-            SigningCredentials = credenciais,
-            Expires = DateTime.UtcNow.AddHours(double.Parse(jwtSettings["ExpirationInHours"]!))
-        };
-
-        var token = handler.CreateToken(descriptor);
-        return handler.WriteToken(token);
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
-
 }

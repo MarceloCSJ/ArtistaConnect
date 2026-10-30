@@ -1,12 +1,15 @@
-using System.Linq.Expressions;
 using ArtistaConnect.Model;
-using Microsoft.EntityFrameworkCore;
-using MySql.Data.MySqlClient;
+
 namespace ArtistaConnect.Data;
 
 public class ArtistaDAO
 {
-    private ArtistaContext conexao = new ArtistaContext();
+    private readonly ArtistaContext conexao;
+
+    public ArtistaDAO(ArtistaContext conexao)
+    {
+        this.conexao = conexao;
+    }
 
     public void InserirMusica(Musica musica)
     {

@@ -3,7 +3,12 @@ using ArtistaConnect.Model;
 
 public class MusicaServicos
 {
-    ArtistaDAO artistaDAO = new ArtistaDAO();
+    private readonly ArtistaDAO artistaDAO;
+
+    public MusicaServicos(ArtistaDAO artistaDAO)
+    {
+        this.artistaDAO = artistaDAO;
+    }
     public void InserirMusica(Musica musica)
     {
         artistaDAO.InserirMusica(musica);

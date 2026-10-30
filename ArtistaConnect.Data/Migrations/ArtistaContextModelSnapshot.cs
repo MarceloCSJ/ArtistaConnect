@@ -21,6 +21,47 @@ namespace ArtistaConnect.Data.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("ArtistaConnect.Model.Artista", b =>
+                {
+                    b.Property<string>("ID")
+                        .HasMaxLength(36)
+                        .HasColumnType("varchar(36)");
+
+                    b.Property<string>("Bio")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("GeneroMusical")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("Artistas");
+                });
+
+            modelBuilder.Entity("ArtistaConnect.Model.GeneroMusical", b =>
+                {
+                    b.Property<string>("ID")
+                        .HasMaxLength(36)
+                        .HasColumnType("varchar(36)");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("Nome")
+                        .IsUnique();
+
+                    b.ToTable("GenerosMusicais");
+                });
+
             modelBuilder.Entity("ArtistaConnect.Model.Musica", b =>
                 {
                     b.Property<string>("Titulo")
@@ -35,6 +76,30 @@ namespace ArtistaConnect.Data.Migrations
                     b.HasKey("Titulo");
 
                     b.ToTable("Musicas");
+                });
+
+            modelBuilder.Entity("ArtistaConnect.Model.Usuario", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)");
+
+                    b.Property<string>("SenhaHash")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("Nome")
+                        .IsUnique();
+
+                    b.ToTable("Usuarios");
                 });
 #pragma warning restore 612, 618
         }
