@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using System.Text.Json.Serialization;
 using ArtistaConnect.Model;
 using ArtistaConnect.Service;
@@ -44,16 +45,28 @@ builder.Services.AddAuthentication(options =>
 });
 builder.Services.AddAuthorization();
 
+// Limita tentativas de login/cadastro por IP (força bruta).
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("autenticacao", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+});
+
 var app = builder.Build();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
-app.MapPost("/login/auth", ([FromBody] Artista artista) =>
-{
-    TokenService authService = new TokenService(builder.Configuration);
-    return authService.GerarToken(artista);
-});
+app.MapCadastroEndpoints();
 
 var musicasGroup = app.MapGroup("/musicas").RequireAuthorization();
 
@@ -64,17 +77,30 @@ musicasGroup.MapGet("/", () => {
 });
 //End-point para Inserir/Postar a musica no Banco de Dados
 musicasGroup.MapPost("/", ([FromBody] Musica musica) =>{
+    if (!DuracaoValida(musica.Duracao))
+        return Results.ValidationProblem(new Dictionary<string, string[]>
+        {
+            ["duracao"] = ["Informe a duração no formato minutos:segundos (ex.: 3:45)."]
+        });
     new MusicaServicos().InserirMusica(musica);
-    return "Música inserida com sucesso!";
+    return Results.Text("Música inserida com sucesso!");
 });
 //End-point para Editar a musica
 musicasGroup.MapPut("/", ([FromBody] Musica musica) =>{
+    if (!DuracaoValida(musica.Duracao))
+        return Results.ValidationProblem(new Dictionary<string, string[]>
+        {
+            ["duracao"] = ["Informe a duração no formato minutos:segundos (ex.: 3:45)."]
+        });
     new MusicaServicos().EditarMusica(musica);
-    return "Música editada com sucesso!";
+    return Results.Text("Música editada com sucesso!");
 });
 //End-point para Deletar a musica
 musicasGroup.MapDelete("/", ([FromBody] Musica musica) =>{
     new MusicaServicos().RemoverMusica(musica);
     return "Música deletada com sucesso!";
 });
+static bool DuracaoValida(string? duracao) =>
+    duracao is not null && System.Text.RegularExpressions.Regex.IsMatch(duracao, @"^\d{1,3}:[0-5]\d$");
+
 app.Run();

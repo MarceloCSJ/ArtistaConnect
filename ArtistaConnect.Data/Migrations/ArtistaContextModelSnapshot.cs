@@ -21,6 +21,49 @@ namespace ArtistaConnect.Data.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("ArtistaConnect.Model.Artista", b =>
+                {
+                    b.Property<string>("ID")
+                        .HasMaxLength(36)
+                        .HasColumnType("varchar(36)");
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("GeneroMusical")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("Artistas");
+                });
+
+            modelBuilder.Entity("ArtistaConnect.Model.GeneroMusical", b =>
+                {
+                    b.Property<string>("ID")
+                        .HasMaxLength(36)
+                        .HasColumnType("varchar(36)");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("Nome")
+                        .IsUnique();
+
+                    b.ToTable("GenerosMusicais");
+                });
+
             modelBuilder.Entity("ArtistaConnect.Model.Musica", b =>
                 {
                     b.Property<string>("Titulo")
@@ -35,6 +78,32 @@ namespace ArtistaConnect.Data.Migrations
                     b.HasKey("Titulo");
 
                     b.ToTable("Musicas");
+                });
+
+            modelBuilder.Entity("ArtistaConnect.Model.Usuario", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("SenhaHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Nome")
+                        .IsUnique();
+
+                    b.ToTable("Usuarios");
                 });
 #pragma warning restore 612, 618
         }

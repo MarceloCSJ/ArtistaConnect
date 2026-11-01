@@ -16,7 +16,9 @@ public class TokenService
     {
         _configuration = configuration;
     }
-    public string GerarToken(Artista artista)
+    public string GerarToken(Artista artista) => GerarToken(artista.Nome!);
+
+    public string GerarToken(string nome)
     {
         var handler = new JwtSecurityTokenHandler();
 
@@ -32,7 +34,7 @@ public class TokenService
 
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, artista.Nome!)
+            new Claim(ClaimTypes.Name, nome)
         };
 
         var descriptor = new SecurityTokenDescriptor
